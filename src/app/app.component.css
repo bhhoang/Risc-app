@@ -1,35 +1,35 @@
-:root {
-    --light-bg: #f5f7fb;
-  }
-  
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  
-  body {
-    font-family: 'Nunito', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-    background-color: var(--light-bg);
-  }
-  
-  .app-container {
-    display: flex;
-    min-height: 100vh;
-  }
-  
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.content {
+  flex: 1;
+  margin-left: 80px;
+  transition: margin-left var(--transition-normal);
+  min-height: 100vh;
+  background-color: var(--light);
+  width: calc(100% - 80px);
+}
+
+/* When sidebar is expanded */
+:host ::ng-deep .navigation.expanded + .content {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
   .content {
-    flex: 1;
-    margin-left: 70px; /* Width of collapsed sidebar */
-    transition: margin-left 0.3s ease;
-    min-height: 100vh;
-    background-color: var(--light-bg);
+    margin-left: 0;
+    margin-bottom: 60px;
+    width: 100%;
   }
   
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .content {
-      margin-left: 0;
-      margin-bottom: 50px; /* Height of the bottom navigation bar on mobile */
-    }
+  :host ::ng-deep .navigation.expanded + .content {
+    margin-left: 0;
+    width: 100%;
   }
+}

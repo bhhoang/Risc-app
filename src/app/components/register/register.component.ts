@@ -18,6 +18,7 @@ export class RegisterComponent {
   email: string = '';
   mot_de_passe: string = '';
   confirmPassword: string = '';
+  niveau: string = 'CP'; // Default level
   acceptTerms: boolean = false;
   showPassword: boolean = false;
   loading: boolean = false;
@@ -45,7 +46,8 @@ export class RegisterComponent {
     this.authService.register({
       nom: this.nom,
       email: this.email,
-      mot_de_passe: this.mot_de_passe
+      mot_de_passe: this.mot_de_passe,
+      niveau_scolaire: this.niveau
     }).subscribe(
       (response) => {
         this.loading = false;
@@ -57,12 +59,12 @@ export class RegisterComponent {
         
         if (error.status === 400) {
           if (error.error?.message?.includes('email')) {
-            this.errorMessage = 'Cet email est déjà utilisé. Veuillez essayer avec une autre adresse.';
+            this.errorMessage = 'Cet email est déjà utilisé. Essaie avec une autre adresse.';
           } else {
             this.errorMessage = error.error?.message || 'Une erreur s\'est produite lors de l\'inscription.';
           }
         } else {
-          this.errorMessage = 'Une erreur s\'est produite lors de l\'inscription. Veuillez réessayer plus tard.';
+          this.errorMessage = 'Une erreur s\'est produite. Vérifie ta connexion et réessaie.';
         }
       }
     );

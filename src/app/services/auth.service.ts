@@ -60,7 +60,7 @@ export class AuthService {
   }
 
   // Enregistrement d'un nouvel utilisateur
-  register(user: { nom: string, email: string, mot_de_passe: string }): Observable<any> {
+  register(user: { nom: string, email: string, mot_de_passe: string, niveau_scolaire: string }): Observable<any> {
     return this.http.post<{ message: string; user: User }>(`${this.apiUrl}/register`, user)
       .pipe(
         tap(response => {
@@ -157,7 +157,7 @@ export class AuthService {
   // Gérer la connexion automatique
   autoLogin(): void {
     if (!this.isBrowser) {
-      return; // Skip auto-login on server
+      return;
     }
     
     const userData = localStorage.getItem('currentUser');

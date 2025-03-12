@@ -1,57 +1,57 @@
 <!-- src/app/components/navigation/navigation.component.html -->
 <nav class="navigation" [class.expanded]="expanded">
-    <div class="nav-header">
-      <div class="logo">
-        <span class="logo-icon">🎓</span>
-        <span class="logo-text" *ngIf="expanded">QuizEducatif</span>
+  <div class="nav-header">
+    <a class="logo" routerLink="/">
+      <div class="logo-icon">🎓</div>
+      <div class="logo-text" *ngIf="expanded">AQuA</div>
+    </a>
+    <button class="toggle-btn" (click)="toggleNav()">
+      {{ expanded ? '◀' : '▶' }}
+    </button>
+  </div>
+  
+  <div class="nav-content">
+    <ul class="nav-links">
+      <li>
+        <a routerLink="/quiz" routerLinkActive="active" class="nav-link">
+          <span class="nav-icon">🎮</span>
+          <span class="nav-label" *ngIf="expanded">Jouer au Quiz</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/history" routerLinkActive="active" class="nav-link">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label" *ngIf="expanded">Mes progrès</span>
+        </a>
+      </li>
+    </ul>
+    
+    <div class="user-section" *ngIf="authService.isLoggedIn()">
+      <div class="user-info" *ngIf="expanded">
+        <div class="user-avatar">{{ getUserInitials() }}</div>
+        <div class="user-details">
+          <span class="user-name">{{ authService.getCurrentUser()?.nom || 'Champion' }}</span>
+          <span class="user-level">Niveau {{ authService.getCurrentUser()?.niveau_scolaire || 'CP' }}</span>
+        </div>
       </div>
-      <button class="toggle-btn" (click)="toggleNav()">
-        {{ expanded ? '◀' : '▶' }}
-      </button>
+      
+      <div class="nav-links">
+        <a (click)="logout()" class="nav-link logout-link">
+          <span class="nav-icon">🚪</span>
+          <span class="nav-label" *ngIf="expanded">Déconnexion</span>
+        </a>
+      </div>
     </div>
     
-    <div class="nav-content">
-      <ul class="nav-links">
-        <li>
-          <a routerLink="/quiz" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">📝</span>
-            <span class="nav-label" *ngIf="expanded">Quiz</span>
-          </a>
-        </li>
-        <li>
-          <a routerLink="/history" routerLinkActive="active" class="nav-link">
-            <span class="nav-icon">📊</span>
-            <span class="nav-label" *ngIf="expanded">Historique</span>
-          </a>
-        </li>
-      </ul>
-      
-      <div class="user-section" *ngIf="authService.isLoggedIn()">
-        <div class="user-info" *ngIf="expanded">
-          <div class="user-avatar">{{ getUserInitials() }}</div>
-          <div class="user-details">
-            <span class="user-name">{{ authService.getCurrentUser()?.nom || 'Utilisateur' }}</span>
-            <span class="user-role">Élève</span>
-          </div>
-        </div>
-        
-        <div class="nav-links">
-          <a (click)="logout()" class="nav-link logout-link">
-            <span class="nav-icon">🚪</span>
-            <span class="nav-label" *ngIf="expanded">Déconnexion</span>
-          </a>
-        </div>
-      </div>
-      
-      <div class="auth-links" *ngIf="!authService.isLoggedIn()">
-        <a routerLink="/login" class="nav-link">
-          <span class="nav-icon">🔑</span>
-          <span class="nav-label" *ngIf="expanded">Connexion</span>
-        </a>
-        <a routerLink="/register" class="nav-link">
-          <span class="nav-icon">📋</span>
-          <span class="nav-label" *ngIf="expanded">Inscription</span>
-        </a>
-      </div>
+    <div class="auth-links" *ngIf="!authService.isLoggedIn()">
+      <a routerLink="/login" class="nav-link">
+        <span class="nav-icon">🔑</span>
+        <span class="nav-label" *ngIf="expanded">Connexion</span>
+      </a>
+      <a routerLink="/register" class="nav-link">
+        <span class="nav-icon">✏️</span>
+        <span class="nav-label" *ngIf="expanded">Inscription</span>
+      </a>
     </div>
-  </nav>
+  </div>
+</nav>

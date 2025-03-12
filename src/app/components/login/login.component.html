@@ -1,3 +1,4 @@
+<!-- src/app/components/login/login.component.html -->
 <div class="auth-container">
   <div class="auth-card">
     <div class="auth-header">
@@ -8,8 +9,12 @@
     <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
       <div class="form-group" [class.error]="emailInput.invalid && emailInput.touched">
         <label for="email">Email</label>
-        <div class="input-container">
-          <span class="input-icon">✉️</span>
+        <div class="input-field">
+          <div class="icon-container">
+            <svg class="email-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+              <path fill="none" stroke="#5677fc" stroke-width="2" d="M3,5 L21,5 L21,19 L3,19 L3,5 M3,5 L12,13 L21,5"/>
+            </svg>
+          </div>
           <input type="email" id="email" [(ngModel)]="email" name="email" required email #emailInput="ngModel"
             placeholder="votre-email@exemple.com">
         </div>
@@ -21,13 +26,23 @@
 
       <div class="form-group" [class.error]="passwordInput.invalid && passwordInput.touched">
         <label for="mot_de_passe">Mot de passe</label>
-        <div class="input-container">
-          <span class="input-icon">🔒</span>
+        <div class="input-field">
+          <div class="icon-container">
+            <svg class="lock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+              <path fill="#F0C419" d="M18,10 L18,8 C18,4.7 15.3,2 12,2 C8.7,2 6,4.7 6,8 L6,10 L4,10 L4,22 L20,22 L20,10 L18,10 Z M8,8 C8,5.8 9.8,4 12,4 C14.2,4 16,5.8 16,8 L16,10 L8,10 L8,8 Z"/>
+              <path fill="#F29C1F" d="M12,16 C13.1,16 14,15.1 14,14 C14,12.9 13.1,12 12,12 C10.9,12 10,12.9 10,14 C10,15.1 10.9,16 12,16 Z"/>
+            </svg>
+          </div>
           <input [type]="showPassword ? 'text' : 'password'" id="mot_de_passe" [(ngModel)]="mot_de_passe"
             name="mot_de_passe" required #passwordInput="ngModel" placeholder="Votre mot de passe">
-          <button type="button" class="password-toggle" (click)="showPassword = !showPassword">
-            {{ showPassword ? '🙈' : '👁️' }}
-          </button>
+          <div class="visibility-toggle" (click)="showPassword = !showPassword">
+            <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+              <path fill="#777" d="M12,5 C16.4183,5 20.0468,7.60879 22,12 C20.0468,16.3912 16.4183,19 12,19 C7.58172,19 3.95319,16.3912 2,12 C3.95319,7.60879 7.58172,5 12,5 Z M12,7 C9.23858,7 7,9.23858 7,12 C7,14.7614 9.23858,17 12,17 C14.7614,17 17,14.7614 17,12 C17,9.23858 14.7614,7 12,7 Z M12,9 C13.6569,9 15,10.3431 15,12 C15,13.6569 13.6569,15 12,15 C10.3431,15 9,13.6569 9,12 C9,10.3431 10.3431,9 12,9 Z"/>
+            </svg>
+            <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+              <path fill="#777" d="M2,5 L22,19 M9.9,7.2 C10.5,7.1 11.2,7 12,7 C14.7614,7 17,9.23858 17,12 C17,12.5 16.9,12.9 16.8,13.4 M13.5,14.5 C13.1,14.8 12.6,15 12,15 C10.3431,15 9,13.6569 9,12 C9,11.7 9.1,11.4 9.2,11.1 M17.4,8.8 C19.3,10 20.5,11.9 21,12 C20.0468,16.3912 16.4183,19 12,19 C10.7,19 9.4,18.7 8.3,18.2 M4.6,16 C3.6,15.1 2.9,14 2.5,14 C3.1,11.5 4.5,9.1 6.4,7.6"/>
+            </svg>
+          </div>
         </div>
         <div class="error-message" *ngIf="passwordInput.invalid && passwordInput.touched">
           <span *ngIf="passwordInput.errors?.['required']">Le mot de passe est requis</span>
@@ -46,35 +61,10 @@
         {{ errorMessage }}
       </div>
 
-      <!-- <button type="submit" class="btn btn-primary full-width" id="login-submit-button"
-        style="visibility: visible; display: flex;" [disabled]="loginForm.invalid || loading">
+      <button type="submit" class="login-button" [disabled]="loginForm.invalid || loading">
         <span *ngIf="loading" class="loader"></span>
         <span *ngIf="!loading">Se connecter</span>
-      </button> -->
-      <div style="margin-top: 24px; width: 100%;">
-        <button 
-          type="submit" 
-          style="
-            width: 100%;
-            padding: 12px;
-            background-color: #4a6bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: relative;
-            z-index: 100;
-          "
-        >
-        <span *ngIf="loading" class="loader"></span>
-        <span *ngIf="!loading">Se connecter</span>
-        </button>
-      </div>
+      </button>
     </form>
 
     <div class="auth-footer">
