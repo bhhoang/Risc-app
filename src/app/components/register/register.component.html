@@ -1,15 +1,138 @@
-<h2>Inscription</h2>
-<form (ngSubmit)="onSubmit()">
-  <label for="nom">Nom:</label>
-  <input type="text" id="nom" [(ngModel)]="nom" name="nom" required>
+<!-- src/app/components/register/register.component.html -->
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Inscription</h1>
+      <p>Créez votre compte pour accéder aux quiz éducatifs</p>
+    </div>
+    
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-group" [class.error]="nomInput.invalid && nomInput.touched">
+        <label for="nom">Nom complet</label>
+        <div class="input-container">
+          <span class="input-icon">👤</span>
+          <input 
+            type="text" 
+            id="nom" 
+            [(ngModel)]="nom" 
+            name="nom" 
+            required
+            minlength="3"
+            #nomInput="ngModel"
+            placeholder="Votre nom complet">
+        </div>
+        <div class="error-message" *ngIf="nomInput.invalid && nomInput.touched">
+          <span *ngIf="nomInput.errors?.['required']">Le nom est requis</span>
+          <span *ngIf="nomInput.errors?.['minlength']">Le nom doit contenir au moins 3 caractères</span>
+        </div>
+      </div>
 
-  <label for="email">Email:</label>
-  <input type="email" id="email" [(ngModel)]="email" name="email" required>
+      <div class="form-group" [class.error]="emailInput.invalid && emailInput.touched">
+        <label for="email">Email</label>
+        <div class="input-container">
+          <span class="input-icon">✉️</span>
+          <input 
+            type="email" 
+            id="email" 
+            [(ngModel)]="email" 
+            name="email" 
+            required 
+            email
+            #emailInput="ngModel"
+            placeholder="votre-email@exemple.com">
+        </div>
+        <div class="error-message" *ngIf="emailInput.invalid && emailInput.touched">
+          <span *ngIf="emailInput.errors?.['required']">L'email est requis</span>
+          <span *ngIf="emailInput.errors?.['email']">Veuillez saisir une adresse email valide</span>
+        </div>
+      </div>
 
-  <label for="mot_de_passe">Mot de passe:</label>
-  <input type="password" id="mot_de_passe" [(ngModel)]="mot_de_passe" name="mot_de_passe" required>
+      <div class="form-group" [class.error]="passwordInput.invalid && passwordInput.touched">
+        <label for="mot_de_passe">Mot de passe</label>
+        <div class="input-container">
+          <span class="input-icon">🔒</span>
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="mot_de_passe" 
+            [(ngModel)]="mot_de_passe" 
+            name="mot_de_passe" 
+            required
+            minlength="6"
+            #passwordInput="ngModel"
+            placeholder="Choisissez un mot de passe">
+          <button 
+            type="button" 
+            class="password-toggle" 
+            (click)="showPassword = !showPassword">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <div class="error-message" *ngIf="passwordInput.invalid && passwordInput.touched">
+          <span *ngIf="passwordInput.errors?.['required']">Le mot de passe est requis</span>
+          <span *ngIf="passwordInput.errors?.['minlength']">Le mot de passe doit contenir au moins 6 caractères</span>
+        </div>
+      </div>
 
-  <button type="submit">S'inscrire</button>
-</form>
+      <div class="form-group confirm-password" [class.error]="passwordConfirmInput.invalid && passwordConfirmInput.touched || passwordMismatch">
+        <label for="confirm_password">Confirmer le mot de passe</label>
+        <div class="input-container">
+          <span class="input-icon">🔒</span>
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="confirm_password" 
+            [(ngModel)]="confirmPassword" 
+            name="confirm_password" 
+            required
+            #passwordConfirmInput="ngModel"
+            placeholder="Confirmez votre mot de passe">
+        </div>
+        <div class="error-message" *ngIf="(passwordConfirmInput.invalid && passwordConfirmInput.touched) || passwordMismatch">
+          <span *ngIf="passwordConfirmInput.errors?.['required']">La confirmation du mot de passe est requise</span>
+          <span *ngIf="passwordMismatch">Les mots de passe ne correspondent pas</span>
+        </div>
+      </div>
 
-<p>Déjà inscrit ? <a routerLink="/login">Se connecter</a></p>
+      <div class="form-group terms">
+        <label class="checkbox-container">
+          <input type="checkbox" [(ngModel)]="acceptTerms" name="acceptTerms" required #termsCheckbox="ngModel">
+          <span class="checkbox-text">J'accepte les <a href="#">conditions d'utilisation</a> et la <a href="#">politique de confidentialité</a></span>
+        </label>
+        <div class="error-message" *ngIf="termsCheckbox.invalid && registerForm.submitted">
+          <span>Vous devez accepter les conditions d'utilisation</span>
+        </div>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div style="margin-top: 24px; width: 100%;">
+        <button 
+          type="submit" 
+          style="
+            width: 100%;
+            padding: 12px;
+            background-color: #4a6bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative;
+            z-index: 100;
+          "
+        >
+          S'inscrire
+        </button>
+      </div>
+    </form>
+
+    <div class="auth-footer">
+      <p>Déjà inscrit ? <a routerLink="/login">Se connecter</a></p>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,40 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global button visibility fix */
+button, 
+.btn, 
+.btn-primary, 
+input[type="submit"], 
+input[type="button"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure all elements with display:flex remain visible */
+[style*="display: flex"],
+[style*="display:flex"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Fix for Angular SSR visibility issues */
+.auth-container, .card, .form-group, .alert {
+  visibility: visible !important;
+}
+
+/* Additional layer to prevent CSS conflicts */
+body button[type="submit"],
+body .btn-primary, 
+body .btn {
+  background-color: #4a6bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}

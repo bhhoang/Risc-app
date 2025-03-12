@@ -1,50 +1,121 @@
-<h2>Quiz</h2>
-<div *ngIf="authService.isLoggedIn()">
-  <label for="niveau">Niveau scolaire:</label>
-  <select id="niveau" [(ngModel)]="niveau">
-    <option value="CP">CP</option>
-    <option value="CE1">CE1</option>
-    <option value="CE2">CE2</option>
-    <option value="CM1">CM1</option>
-    <option value="CM2">CM2</option>
-  </select>
+<!-- src/app/components/quiz/quiz.component.html -->
+<div class="quiz-container">
+  <div class="header">
+    <h1>Quiz Éducatif</h1>
+    <div class="user-info" *ngIf="authService.isLoggedIn()">
+      <span>Bonjour, {{ authService.getCurrentUser()?.nom || 'Utilisateur' }}</span>
+      <button class="logout-btn" (click)="logout()">Déconnexion</button>
+    </div>
+  </div>
 
-  <label for="matiere">Matière:</label>
-  <select id="matiere" [(ngModel)]="matiere">
-    <option value="Maths">Maths</option>
-    <option value="Français">Français</option>
-    <option value="Histoire">Histoire</option>
-    <option value="Sciences">Sciences</option>
-  </select>
-
-  <label for="sous_sujet">Sous-sujet:</label>
-  <select id="sous_sujet" [(ngModel)]="sous_sujet">
-    <option *ngFor="let topic of mathTopics[niveau]" [value]="topic">{{ topic }}</option>
-  </select>
-
-  <label for="nombre_questions">Nombre de questions:</label>
-  <input type="number" id="nombre_questions" [(ngModel)]="nombre_questions" min="3" max="10">
-
-  <button (click)="generateQuiz()">Générer le quiz</button>
-
-  <div *ngIf="questions.length > 0">
-    <h3>Questions</h3>
-    <form (ngSubmit)="submitAnswers()">
-      <div *ngFor="let question of questions; let i = index">
-        <label>{{ question }}</label>
-        <input type="text" [(ngModel)]="answers[i]" name="answer{{i}}">
+  <div class="content-wrapper">
+    <!-- Login/Register message for unauthenticated users -->
+    <div class="auth-message" *ngIf="!authService.isLoggedIn()">
+      <div class="card">
+        <h2>Bienvenue sur notre plateforme de quiz éducatifs</h2>
+        <p>Pour accéder aux quiz et suivre votre progression, veuillez vous connecter ou créer un compte.</p>
+        <div class="button-group">
+          <a routerLink="/login" class="btn btn-primary">Se connecter</a>
+          <a routerLink="/register" class="btn btn-outline">S'inscrire</a>
+        </div>
       </div>
-      <button type="submit">Valider mes réponses</button>
-    </form>
-  </div>
+    </div>
 
-  <div *ngIf="feedback">
-    <h3>Feedback</h3>
-    <p>{{ feedback }}</p>
+    <!-- Quiz configuration for authenticated users -->
+    <div class="quiz-setup" *ngIf="authService.isLoggedIn() && !quizStarted">
+      <div class="card">
+        <h2>Créer un nouveau quiz</h2>
+        <div class="form-group">
+          <label for="niveau">Niveau scolaire</label>
+          <select id="niveau" [(ngModel)]="niveau" (change)="updateSubjects()">
+            <option value="CP">CP</option>
+            <option value="CE1">CE1</option>
+            <option value="CE2">CE2</option>
+            <option value="CM1">CM1</option>
+            <option value="CM2">CM2</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="matiere">Matière</label>
+          <select id="matiere" [(ngModel)]="matiere" (change)="updateSubjects()">
+            <option value="Maths">Mathématiques</option>
+            <option value="Français">Français</option>
+            <option value="Histoire">Histoire</option>
+            <option value="Sciences">Sciences</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sous_sujet">Sous-sujet</label>
+          <select id="sous_sujet" [(ngModel)]="sous_sujet">
+            <option *ngFor="let topic of availableTopics" [value]="topic">{{ topic }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="nombre_questions">Nombre de questions</label>
+          <div class="range-container">
+            <input type="range" id="nombre_questions" [(ngModel)]="nombre_questions" min="3" max="10" step="1">
+            <span class="range-value">{{ nombre_questions }}</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary full-width" style="display: inline-flex; visibility: visible;" (click)="generateQuiz()">
+          <span class="icon">✏️</span> 
+          <span *ngIf="!loading">Générer le quiz</span>
+          <span *ngIf="loading" class="loader"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quiz questions display -->
+    <div class="quiz-questions" *ngIf="authService.isLoggedIn() && quizStarted && !quizSubmitted">
+      <div class="card">
+        <div class="quiz-header">
+          <h2>{{ matiere }} - {{ sous_sujet }}</h2>
+          <div class="quiz-info">
+            <span>Niveau: {{ niveau }}</span>
+            <span>{{ currentQuestionIndex + 1 }} / {{ questions.length }}</span>
+          </div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress" [style.width.%]="(currentQuestionIndex + 1) / questions.length * 100"></div>
+        </div>
+
+        <div class="question-container" *ngIf="currentQuestionIndex < questions.length">
+          <h3 class="question">{{ questions[currentQuestionIndex] }}</h3>
+          <div class="answer-input">
+            <input type="text" [(ngModel)]="answers[currentQuestionIndex]" placeholder="Votre réponse..." 
+                  (keyup.enter)="nextQuestion()">
+          </div>
+          <div class="navigation-buttons">
+            <button class="btn btn-outline" *ngIf="currentQuestionIndex > 0" (click)="previousQuestion()">
+              <span class="icon">←</span> Question précédente
+            </button>
+            <button class="btn btn-primary" *ngIf="currentQuestionIndex < questions.length - 1" (click)="nextQuestion()">
+              Question suivante <span class="icon">→</span>
+            </button>
+            <button class="btn btn-success" *ngIf="currentQuestionIndex === questions.length - 1" (click)="submitAnswers()">
+              Terminer le quiz <span class="icon">✓</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz results display -->
+    <div class="quiz-results" *ngIf="authService.isLoggedIn() && quizSubmitted">
+      <div class="card">
+        <h2>Résultats du quiz</h2>
+        <div class="feedback-container" [innerHTML]="formattedFeedback"></div>
+        <div class="result-actions">
+          <button class="btn btn-primary" (click)="resetQuiz()">
+            <span class="icon">↺</span> Nouveau quiz
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
-<div *ngIf="!authService.isLoggedIn()">
-  <p>Veuillez vous connecter pour accéder au quiz.</p>
-  <a routerLink="/login">Se connecter</a> <!-- Lien vers la page de connexion -->
-  <p>Pas encore inscrit ? <a routerLink="/register">S'inscrire</a></p> <!-- Lien vers la page d'inscription -->
 </div>

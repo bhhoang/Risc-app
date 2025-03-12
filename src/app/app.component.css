@@ -1,0 +1,35 @@
+:root {
+    --light-bg: #f5f7fb;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Nunito', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background-color: var(--light-bg);
+  }
+  
+  .app-container {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  .content {
+    flex: 1;
+    margin-left: 70px; /* Width of collapsed sidebar */
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+    background-color: var(--light-bg);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .content {
+      margin-left: 0;
+      margin-bottom: 50px; /* Height of the bottom navigation bar on mobile */
+    }
+  }

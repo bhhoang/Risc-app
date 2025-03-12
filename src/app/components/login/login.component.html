@@ -1,12 +1,84 @@
-<h2>Connexion</h2>
-<form (ngSubmit)="onSubmit()">
-  <label for="email">Email:</label>
-  <input type="email" id="email" [(ngModel)]="email" name="email" required>
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Connexion</h1>
+      <p>Connectez-vous pour accéder à votre compte</p>
+    </div>
 
-  <label for="mot_de_passe">Mot de passe:</label>
-  <input type="password" id="mot_de_passe" [(ngModel)]="mot_de_passe" name="mot_de_passe" required>
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group" [class.error]="emailInput.invalid && emailInput.touched">
+        <label for="email">Email</label>
+        <div class="input-container">
+          <span class="input-icon">✉️</span>
+          <input type="email" id="email" [(ngModel)]="email" name="email" required email #emailInput="ngModel"
+            placeholder="votre-email@exemple.com">
+        </div>
+        <div class="error-message" *ngIf="emailInput.invalid && emailInput.touched">
+          <span *ngIf="emailInput.errors?.['required']">L'email est requis</span>
+          <span *ngIf="emailInput.errors?.['email']">Veuillez saisir une adresse email valide</span>
+        </div>
+      </div>
 
-  <button type="submit">Se connecter</button>
-</form>
+      <div class="form-group" [class.error]="passwordInput.invalid && passwordInput.touched">
+        <label for="mot_de_passe">Mot de passe</label>
+        <div class="input-container">
+          <span class="input-icon">🔒</span>
+          <input [type]="showPassword ? 'text' : 'password'" id="mot_de_passe" [(ngModel)]="mot_de_passe"
+            name="mot_de_passe" required #passwordInput="ngModel" placeholder="Votre mot de passe">
+          <button type="button" class="password-toggle" (click)="showPassword = !showPassword">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <div class="error-message" *ngIf="passwordInput.invalid && passwordInput.touched">
+          <span *ngIf="passwordInput.errors?.['required']">Le mot de passe est requis</span>
+        </div>
+      </div>
 
-<p>Pas encore inscrit ? <a routerLink="/register">S'inscrire</a></p>
+      <div class="form-group remember-me">
+        <label class="checkbox-container">
+          <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe">
+          <span class="checkbox-text">Se souvenir de moi</span>
+        </label>
+        <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <!-- <button type="submit" class="btn btn-primary full-width" id="login-submit-button"
+        style="visibility: visible; display: flex;" [disabled]="loginForm.invalid || loading">
+        <span *ngIf="loading" class="loader"></span>
+        <span *ngIf="!loading">Se connecter</span>
+      </button> -->
+      <div style="margin-top: 24px; width: 100%;">
+        <button 
+          type="submit" 
+          style="
+            width: 100%;
+            padding: 12px;
+            background-color: #4a6bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative;
+            z-index: 100;
+          "
+        >
+        <span *ngIf="loading" class="loader"></span>
+        <span *ngIf="!loading">Se connecter</span>
+        </button>
+      </div>
+    </form>
+
+    <div class="auth-footer">
+      <p>Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,222 @@
+<!-- src/app/components/quiz-history/quiz-history.component.html -->
+<div class="history-container">
+    <div class="header">
+      <h1>Historique et Progression</h1>
+      <div class="user-info" *ngIf="authService.isLoggedIn()">
+        <span>Bonjour, {{ authService.getCurrentUser()?.nom || 'Utilisateur' }}</span>
+        <button class="logout-btn" (click)="logout()">Déconnexion</button>
+      </div>
+    </div>
+  
+    <div class="content-wrapper">
+      <!-- Login message for unauthenticated users -->
+      <div class="auth-message" *ngIf="!authService.isLoggedIn()">
+        <div class="card">
+          <h2>Veuillez vous connecter</h2>
+          <p>Pour accéder à votre historique de quiz et suivre votre progression, veuillez vous connecter.</p>
+          <div class="button-group">
+            <a routerLink="/login" class="btn btn-primary">Se connecter</a>
+            <a routerLink="/register" class="btn btn-outline">S'inscrire</a>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Loading state -->
+      <div class="loading-container" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Chargement de vos données...</p>
+      </div>
+  
+      <!-- Error state -->
+      <div class="alert alert-danger" *ngIf="error">
+        <p>{{ error }}</p>
+        <button class="btn btn-outline" (click)="loadQuizHistory()">Réessayer</button>
+      </div>
+  
+      <!-- Content for authenticated users -->
+      <ng-container *ngIf="authService.isLoggedIn() && !loading && !error">
+        <!-- Statistics dashboard -->
+        <div class="stats-dashboard">
+          <div class="card">
+            <h2>Tableau de bord</h2>
+            
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                  <h3>Quiz complétés</h3>
+                  <div class="stat-value">{{ quizStats.totalQuiz }}</div>
+                </div>
+              </div>
+              
+              <div class="stat-card" *ngIf="quizStats.matieresFavorites.length">
+                <div class="stat-icon">📚</div>
+                <div class="stat-info">
+                  <h3>Matière préférée</h3>
+                  <div class="stat-value">{{ quizStats.matieresFavorites[0] }}</div>
+                </div>
+              </div>
+              
+              <div class="stat-card" *ngIf="averageScore !== null">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-info">
+                  <h3>Score moyen</h3>
+                  <div class="stat-value">{{ averageScore }}%</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Score progression chart placeholder -->
+            <div class="progression-chart">
+              <h3>Progression des scores</h3>
+              <div class="chart-container">
+                <!-- Chart would be implemented with a library like Chart.js -->
+                <div class="placeholder-chart" *ngIf="!progressionData.length">
+                  <p>Complétez plus de quiz pour voir votre progression</p>
+                </div>
+                
+                <!-- Simple visual representation of progress -->
+                <div class="progress-bars" *ngIf="progressionData.length">
+                  <div class="progress-month" *ngFor="let item of progressionData">
+                    <div class="month-label">{{ item.month }}</div>
+                    <div class="progress-bar-container">
+                      <div class="progress-bar" [style.width.%]="item.score"></div>
+                      <span class="progress-value">{{ item.score }}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recommendations -->
+        <div class="recommendations">
+          <div class="card">
+            <h2>Recommandations personnalisées</h2>
+            
+            <div class="lacunes-section" *ngIf="recommendations.lacunesIdentifiees.length">
+              <h3>Points à améliorer</h3>
+              <ul class="lacunes-list">
+                <li *ngFor="let lacune of recommendations.lacunesIdentifiees">
+                  <span class="improvement-icon">📝</span>
+                  <span>{{ lacune }}</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div class="recommended-quiz" *ngIf="recommendations.quizSuggeres.length">
+              <h3>Quiz recommandés</h3>
+              <div class="quiz-cards">
+                <div class="quiz-card" *ngFor="let quiz of recommendations.quizSuggeres">
+                  <div class="difficulty-badge" [ngClass]="'difficulty-' + quiz.difficulte.toLowerCase()">
+                    {{ quiz.difficulte }}
+                  </div>
+                  <h4>{{ quiz.titre }}</h4>
+                  <p>{{ quiz.description }}</p>
+                  <div class="quiz-meta">
+                    <span>{{ quiz.matiere }}</span>
+                    <span>{{ quiz.sous_sujet }}</span>
+                  </div>
+                  <button class="btn btn-primary" (click)="startRecommendedQuiz(quiz)">
+                    Commencer
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="sujets-section" *ngIf="recommendations.sujetsAtravailler.length">
+              <h3>Sujets à travailler</h3>
+              <div class="subject-list">
+                <div class="subject-item" *ngFor="let sujet of recommendations.sujetsAtravailler">
+                  <div class="subject-name">
+                    <strong>{{ sujet.matiere }}</strong> - {{ sujet.sous_sujet }}
+                  </div>
+                  <div class="score-bubble">{{ sujet.scoreMoyen }}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quiz history list -->
+        <div class="history-list">
+          <div class="card">
+            <div class="card-header">
+              <h2>Historique des quiz</h2>
+              <div class="filters">
+                <select [(ngModel)]="filterMatiere" (change)="applyFilters()">
+                  <option value="">Toutes les matières</option>
+                  <option value="Maths">Mathématiques</option>
+                  <option value="Français">Français</option>
+                  <option value="Histoire">Histoire</option>
+                  <option value="Sciences">Sciences</option>
+                </select>
+                
+                <select [(ngModel)]="filterNiveau" (change)="applyFilters()">
+                  <option value="">Tous les niveaux</option>
+                  <option value="CP">CP</option>
+                  <option value="CE1">CE1</option>
+                  <option value="CE2">CE2</option>
+                  <option value="CM1">CM1</option>
+                  <option value="CM2">CM2</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="no-history" *ngIf="quizHistory.length === 0">
+              <p>Vous n'avez pas encore complété de quiz.</p>
+              <a routerLink="/quiz" class="btn btn-primary">Commencer un quiz</a>
+            </div>
+            
+            <div class="history-items" *ngIf="quizHistory.length > 0">
+              <div class="history-item" *ngFor="let quiz of quizHistory" (click)="viewQuizDetails(quiz._id)">
+                <div class="quiz-info">
+                  <h3>{{ quiz.matiere }} - {{ quiz.sous_sujet }}</h3>
+                  <div class="quiz-meta">
+                    <span class="level">Niveau {{ quiz.niveau }}</span>
+                    <span class="date">{{ quiz.date_creation | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+                
+                <div class="quiz-score" [ngClass]="{
+                  'high-score': quiz.score >= 80,
+                  'medium-score': quiz.score >= 50 && quiz.score < 80,
+                  'low-score': quiz.score < 50
+                }">
+                  {{ quiz.score }}%
+                </div>
+                
+                <div class="quiz-actions">
+                  <button class="btn-icon" title="Voir les détails">
+                    <span class="icon">👁️</span>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Pagination -->
+              <div class="pagination" *ngIf="pagination && pagination.totalPages > 1">
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!pagination.hasPrevious" 
+                  (click)="changePage(pagination.currentPage - 1)">
+                  &laquo; Précédent
+                </button>
+                
+                <span class="pagination-info">
+                  Page {{ pagination.currentPage }} sur {{ pagination.totalPages }}
+                </span>
+                
+                <button 
+                  class="pagination-btn" 
+                  [disabled]="!pagination.hasNext" 
+                  (click)="changePage(pagination.currentPage + 1)">
+                  Suivant &raquo;
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
