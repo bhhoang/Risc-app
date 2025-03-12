@@ -1,0 +1,23 @@
+/* src/app/components/quiz/quiz.component.css */
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }
+  
+  label, select, input {
+    margin: 10px 0;
+    display: block;
+  }
+  a {
+    color: blue; 
+    text-decoration: underline;
+    cursor: pointer;
+  }

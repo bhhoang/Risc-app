@@ -1,0 +1,15 @@
+<h2>Inscription</h2>
+<form (ngSubmit)="onSubmit()">
+  <label for="nom">Nom:</label>
+  <input type="text" id="nom" [(ngModel)]="nom" name="nom" required>
+
+  <label for="email">Email:</label>
+  <input type="email" id="email" [(ngModel)]="email" name="email" required>
+
+  <label for="mot_de_passe">Mot de passe:</label>
+  <input type="password" id="mot_de_passe" [(ngModel)]="mot_de_passe" name="mot_de_passe" required>
+
+  <button type="submit">S'inscrire</button>
+</form>
+
+<p>Déjà inscrit ? <a routerLink="/login">Se connecter</a></p>
