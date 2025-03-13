@@ -3,6 +3,7 @@ import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { QuizComponent } from './components/quiz/quiz.component';
 import { QuizHistoryComponent } from './components/quiz-history/quiz-history.component';
+import { QuizDetailsComponent } from './components/quiz-details/quiz-details.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -13,6 +14,11 @@ export const routes: Routes = [
     path: 'history', 
     component: QuizHistoryComponent, 
     canActivate: [authGuard] 
+  },
+  {
+    path: 'quiz-details/:id',
+    component: QuizDetailsComponent,
+    canActivate: [authGuard]
   },
   { path: '', redirectTo: '/quiz', pathMatch: 'full' }
 ];

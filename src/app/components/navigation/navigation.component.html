@@ -43,15 +43,17 @@
       </div>
     </div>
     
-    <div class="auth-links" *ngIf="!authService.isLoggedIn()">
-      <a routerLink="/login" class="nav-link">
-        <span class="nav-icon">🔑</span>
-        <span class="nav-label" *ngIf="expanded">Connexion</span>
-      </a>
-      <a routerLink="/register" class="nav-link">
-        <span class="nav-icon">✏️</span>
-        <span class="nav-label" *ngIf="expanded">Inscription</span>
-      </a>
-    </div>
+    <ng-container *ngIf="!authService.isLoggedIn()">
+      <div class="auth-links">
+        <a routerLink="/login" class="nav-link">
+          <span class="nav-icon">🔑</span>
+          <span class="nav-label" *ngIf="expanded">Connexion</span>
+        </a>
+        <a routerLink="/register" class="nav-link">
+          <span class="nav-icon">✏️</span>
+          <span class="nav-label" *ngIf="expanded">Inscription</span>
+        </a>
+      </div>
+    </ng-container>
   </div>
 </nav>

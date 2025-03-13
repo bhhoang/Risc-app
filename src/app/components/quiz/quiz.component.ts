@@ -156,6 +156,20 @@ export class QuizComponent implements OnInit {
         }
       );
   }
+  
+  getUserInitials(): string {
+    const user = this.authService.getCurrentUser();
+    if (!user || !user.nom) return '?';
+    
+    const nameParts = user.nom.split(' ');
+    if (nameParts.length > 1) {
+      // Return first character of first and last name
+      return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+    } else {
+      // If only one name, return first two characters
+      return user.nom.substring(0, 2).toUpperCase();
+    }
+  }
 
   resetQuiz(): void {
     this.quizStarted = false;

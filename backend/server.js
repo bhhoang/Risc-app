@@ -10,9 +10,48 @@ const app = express();
 const PORT = 3000;
 const JWT_SECRET = 'votre_clé_secrète_jwt'; // À remplacer par une clé plus sécurisée en production
 
+
+const originalGet = app.get;
+const originalPost = app.post;
+const originalPut = app.put;
+const originalDelete = app.delete;
+
+// Track registered routes
+const registeredRoutes = [];
+
+app.get = function(path, ...handlers) {
+  if (typeof path === 'string') {
+    registeredRoutes.push({ method: 'GET', path });
+  }
+  return originalGet.apply(this, [path, ...handlers]);
+};
+
+
+
+app.post = function(path, ...handlers) {
+  if (typeof path === 'string') {
+    registeredRoutes.push({ method: 'POST', path });
+  }
+  return originalPost.apply(this, [path, ...handlers]);
+};
+
+app.put = function(path, ...handlers) {
+  if (typeof path === 'string') {
+    registeredRoutes.push({ method: 'PUT', path });
+  }
+  return originalPut.apply(this, [path, ...handlers]);
+};
+
+app.delete = function(path, ...handlers) {
+  if (typeof path === 'string') {
+    registeredRoutes.push({ method: 'DELETE', path });
+  }
+  return originalDelete.apply(this, [path, ...handlers]);
+};
+
 // Connexion à MongoDB
 mongoose
-  .connect('mongodb://localhost:27017/streamlitDB', {
+  .connect('mongodb+srv://bhhoang:vEktNuvo2Z0qpRsE@nanikaclustor.mlolje2.mongodb.net/streamlitDB?retryWrites=true&w=majority&appName=NanikaClustor', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -51,7 +90,7 @@ const Quiz = mongoose.model('Quiz', quizSchema);
 // Middleware
 app.use(bodyParser.json());
 app.use(cors({
-  origin: 'http://localhost:4200', // Autorise les requêtes depuis Angular
+  origin: '*', // Autorise les requêtes depuis Angular
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
@@ -217,6 +256,8 @@ app.post('/api/quiz/generate', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Tous les paramètres sont requis.' });
     }
 
+    console.log(`Generating quiz: ${niveau}, ${matiere}, ${sous_sujet}, ${nombre_questions} questions`);
+
     const prompt = `
       Tu es un professeur spécialisé en ${matiere} pour le niveau ${niveau}.  
       Le sous-sujet actuel est : ${sous_sujet}.
@@ -236,28 +277,40 @@ app.post('/api/quiz/generate', authenticateToken, async (req, res) => {
       8. Adapte la difficulté des questions au niveau scolaire ${niveau}.
     `;
 
-    const response = await axios.post('http://localhost:11434/api/generate', {
-      model: 'deepseek-r1:14b',
-      prompt: prompt,
-      stream: false,
-      options: {
-        temperature: 0.7,
-        top_p: 0.9,
-        num_predict: 5000
+    try {
+      // First try connecting to Ollama
+      const response = await axios.post('http://localhost:11434/api/generate', {
+        model: 'deepseek-r1:8b',
+        prompt: prompt,
+        stream: false,
+        options: {
+          temperature: 0.7,
+          top_p: 0.9,
+          num_predict: 5000
+        }
+      });
+
+      const questions = response.data.response
+        .split('\n')
+        .filter(q => q.trim().startsWith('Q') && q.includes('?'))
+        .map(q => q.trim());
+
+      // Make sure we have at least one question
+      if (questions.length === 0) {
+        throw new Error('No valid questions generated');
       }
-    });
 
-    const questions = response.data.response
-      .split('\n')
-      .filter(q => q.trim().startsWith('Q') && q.includes('?'))
-      .map(q => q.trim());
-
-    res.status(200).json({ questions });
+      res.status(200).json({ questions });
+    }
+    catch (error) {
+      console.error('Error generating quiz:', error);
+      res.status(500).json({ message: 'Error generating quiz.' });
+    }
   } catch (error) {
-    console.error('Erreur lors de la génération du quiz :', error);
+    console.error('Erreur lors de la génération du quiz:', error);
     res.status(500).json({ message: 'Erreur lors de la génération du quiz.' });
-  }
-});
+  }});
+
 
 // Route pour générer un feedback
 app.post('/api/quiz/feedback', authenticateToken, async (req, res) => {
@@ -290,7 +343,7 @@ app.post('/api/quiz/feedback', authenticateToken, async (req, res) => {
     }
 
     const response = await axios.post('http://localhost:11434/api/generate', {
-      model: 'deepseek-r1:14b',
+      model: 'deepseek-r1:8b',
       prompt: feedback_prompt,
       stream: false,
       options: {
@@ -308,26 +361,117 @@ app.post('/api/quiz/feedback', authenticateToken, async (req, res) => {
   }
 });
 
-// Route pour enregistrer un quiz dans l'historique
+app.get('/api/quiz/history', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log(`Getting quiz history for user ID: ${userId}`);
+    
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Filtres optionnels
+    const filters = {};
+    
+    try {
+      filters.utilisateur_id = new mongoose.Types.ObjectId(userId);
+    } catch (e) {
+      console.error(`Invalid ObjectId: ${userId}`, e);
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    
+    if (req.query.matiere) filters.matiere = req.query.matiere;
+    if (req.query.niveau) filters.niveau = req.query.niveau;
+    if (req.query.depuis) {
+      const depuisDate = new Date(req.query.depuis);
+      if (!isNaN(depuisDate.getTime())) {
+        filters.date_creation = { $gte: depuisDate };
+      }
+    }
+
+    console.log('Query filters:', JSON.stringify(filters));
+
+    // Get quiz history with basic pagination
+    const quizHistory = await Quiz.find(filters)
+      .sort({ date_creation: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+    
+    const totalQuiz = await Quiz.countDocuments(filters);
+
+    // Basic stats
+    const response = {
+      quizHistory,
+      pagination: {
+        totalQuiz,
+        totalPages: Math.ceil(totalQuiz / limit),
+        currentPage: page,
+        hasNext: skip + limit < totalQuiz,
+        hasPrevious: page > 1
+      },
+      stats: {
+        totalQuiz,
+        scoresMoyens: {},
+        matieresFavorites: [],
+        progression: {}
+      }
+    };
+
+    console.log(`Found ${quizHistory.length} quizzes for user ${userId}`);
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error getting quiz history:', error);
+    res.status(500).json({ 
+      message: 'Erreur serveur lors de la récupération de l\'historique.',
+      error: error.message 
+    });
+  }
+});
+
 app.post('/api/quiz/history', authenticateToken, async (req, res) => {
   try {
-    const { niveau, matiere, sous_sujet, questions, reponses, feedback } = req.body;
+    console.log('POST /api/quiz/history endpoint called');
+    console.log('Request body:', JSON.stringify(req.body));
+    
+    const { niveau, matiere, sous_sujet, questions, reponses, feedback, manualScore } = req.body;
     const userId = req.user.id;
+
+    console.log(`User ID from token: ${userId}`);
 
     // Validation des données
     if (!niveau || !matiere || !sous_sujet || !questions || !reponses) {
+      console.log('Validation failed, missing required fields');
       return res.status(400).json({ message: 'Données incomplètes pour l\'enregistrement du quiz.' });
     }
 
-    // Calculer un score simple (pourcentage de réponses non vides)
-    const totalQuestions = questions.length;
-    const answeredQuestions = reponses.filter(r => r && r.trim() !== '').length;
-    const score = Math.round((answeredQuestions / totalQuestions) * 100);
+    // Use the manual score if provided, otherwise calculate based on non-empty answers
+    let score;
+    if (manualScore !== undefined && manualScore !== null) {
+      score = manualScore;
+      console.log(`Using manually provided score: ${score}%`);
+    } else {
+      // Fallback to calculating based on answered questions
+      const totalQuestions = questions.length;
+      const answeredQuestions = reponses.filter(r => r && r.trim() !== '').length;
+      score = Math.round((answeredQuestions / totalQuestions) * 100);
+      console.log(`Calculated score from answered questions: ${score}%`);
+    }
 
-    // Extraire les lacunes à partir du feedback (analyse simplifiée)
+    // Create ObjectId from string
+    let userObjectId;
+    try {
+      userObjectId = new mongoose.Types.ObjectId(userId);
+      console.log('Valid ObjectId created:', userObjectId);
+    } catch (err) {
+      console.error('Failed to create ObjectId from userId:', userId, err);
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+
+    // Extract lacunes from feedback (simplified)
     let lacunes = [];
     if (feedback) {
-      // Recherche d'indices de lacunes dans le feedback
       const keywords = ['améliorer', 'difficultés', 'lacune', 'réviser', 'confusion'];
       const feedbackLines = feedback.split('\n');
       
@@ -343,9 +487,9 @@ app.post('/api/quiz/history', authenticateToken, async (req, res) => {
       });
     }
 
-    // Créer un nouvel enregistrement d'historique
+    // Create quiz history record
     const newQuizHistory = new Quiz({
-      utilisateur_id: userId,
+      utilisateur_id: userObjectId,
       niveau,
       matiere,
       sous_sujet,
@@ -353,123 +497,24 @@ app.post('/api/quiz/history', authenticateToken, async (req, res) => {
       reponses,
       feedback,
       score,
-      lacunes: lacunes.slice(0, 5) // Limiter à 5 lacunes maximum
+      lacunes: lacunes.slice(0, 5),
+      date_creation: new Date()
     });
 
-    await newQuizHistory.save();
-    res.status(201).json({ message: 'Quiz enregistré avec succès dans l\'historique.', quizId: newQuizHistory._id });
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement du quiz dans l\'historique:', error);
-    res.status(500).json({ message: 'Erreur serveur lors de l\'enregistrement du quiz.' });
-  }
-});
-
-// Route pour récupérer l'historique des quiz d'un utilisateur
-app.get('/api/quiz/history', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.id;
+    console.log(`Saving quiz with score: ${score}%`);
+    const savedQuiz = await newQuizHistory.save();
+    console.log('Quiz saved successfully with ID:', savedQuiz._id);
     
-    // Pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    // Filtres optionnels
-    const filters = {};
-    filters.utilisateur_id = userId;
-    
-    if (req.query.matiere) filters.matiere = req.query.matiere;
-    if (req.query.niveau) filters.niveau = req.query.niveau;
-    if (req.query.depuis) {
-      const depuisDate = new Date(req.query.depuis);
-      if (!isNaN(depuisDate.getTime())) {
-        filters.date_creation = { $gte: depuisDate };
-      }
-    }
-
-    // Récupérer les quiz avec pagination et tri
-    const quizHistory = await Quiz.find(filters)
-      .sort({ date_creation: -1 }) // Du plus récent au plus ancien
-      .skip(skip)
-      .limit(limit);
-
-    // Compter le nombre total de quiz
-    const totalQuiz = await Quiz.countDocuments(filters);
-
-    // Calcul des statistiques
-    const stats = {
-      totalQuiz,
-      scoresMoyens: {},
-      matieresFavorites: [],
-      progression: {}
-    };
-
-    // Récupérer le score moyen par matière
-    const scoresParMatiere = await Quiz.aggregate([
-      { $match: { utilisateur_id: mongoose.Types.ObjectId(userId) } },
-      { $group: { _id: '$matiere', scoreTotal: { $avg: '$score' } } }
-    ]);
-
-    scoresParMatiere.forEach(item => {
-      stats.scoresMoyens[item._id] = Math.round(item.scoreTotal);
-    });
-
-    // Trouver les matières les plus fréquentes
-    const matieresCounts = await Quiz.aggregate([
-      { $match: { utilisateur_id: mongoose.Types.ObjectId(userId) } },
-      { $group: { _id: '$matiere', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 3 }
-    ]);
-
-    stats.matieresFavorites = matieresCounts.map(item => item._id);
-
-    // Progression sur les 6 derniers mois
-    const sixMoisAvant = new Date();
-    sixMoisAvant.setMonth(sixMoisAvant.getMonth() - 6);
-
-    const progressionParMois = await Quiz.aggregate([
-      { 
-        $match: { 
-          utilisateur_id: mongoose.Types.ObjectId(userId),
-          date_creation: { $gte: sixMoisAvant }
-        } 
-      },
-      {
-        $group: {
-          _id: { 
-            year: { $year: '$date_creation' },
-            month: { $month: '$date_creation' }
-          },
-          scoreTotal: { $avg: '$score' },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { '_id.year': 1, '_id.month': 1 } }
-    ]);
-
-    progressionParMois.forEach(item => {
-      const dateKey = `${item._id.year}-${item._id.month.toString().padStart(2, '0')}`;
-      stats.progression[dateKey] = {
-        scoreMoyen: Math.round(item.scoreTotal),
-        nombreQuiz: item.count
-      };
-    });
-
-    res.status(200).json({
-      quizHistory,
-      pagination: {
-        totalQuiz,
-        totalPages: Math.ceil(totalQuiz / limit),
-        currentPage: page,
-        hasNext: skip + limit < totalQuiz,
-        hasPrevious: page > 1
-      },
-      stats
+    res.status(201).json({ 
+      message: 'Quiz enregistré avec succès dans l\'historique.', 
+      quizId: savedQuiz._id 
     });
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'historique des quiz:', error);
-    res.status(500).json({ message: 'Erreur serveur lors de la récupération de l\'historique.' });
+    console.error('Error saving quiz history:', error);
+    res.status(500).json({ 
+      message: 'Erreur serveur lors de l\'enregistrement du quiz.',
+      error: error.message
+    });
   }
 });
 
@@ -523,7 +568,7 @@ app.get('/api/quiz/recommendations', authenticateToken, async (req, res) => {
 
     // Identifier les matières avec les scores les plus bas
     const scoresBySubject = await Quiz.aggregate([
-      { $match: { utilisateur_id: mongoose.Types.ObjectId(userId) } },
+      { $match: { utilisateur_id: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: { matiere: '$matiere', sous_sujet: '$sous_sujet' }, scoreTotal: { $avg: '$score' } } },
       { $sort: { scoreTotal: 1 } },
       { $limit: 3 }
@@ -574,7 +619,7 @@ app.get('/api/quiz/recommendations', authenticateToken, async (req, res) => {
       `;
 
       const response = await axios.post('http://localhost:11434/api/generate', {
-        model: 'deepseek-r1:14b',
+        model: 'deepseek-r1:8b',
         prompt: prompt,
         stream: false,
         options: {
@@ -608,7 +653,34 @@ app.get('/api/quiz/recommendations', authenticateToken, async (req, res) => {
   }
 });
 
-// Démarrer le serveur
-app.listen(PORT, () => {
-  console.log(`Serveur backend en cours d'exécution sur http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  
+  // Print all registered routes
+  console.log('\nRegistered routes:');
+  registeredRoutes.forEach(route => {
+    console.log(`${route.method}: ${route.path}`);
+  });
+  
+  // Check for critical missing routes
+  const criticalRoutes = [
+    { method: 'GET', path: '/api/quiz/history' },
+    { method: 'POST', path: '/api/quiz/history' },
+    { method: 'GET', path: '/api/quiz/recommendations' }
+  ];
+  
+  const missingRoutes = criticalRoutes.filter(cr => 
+    !registeredRoutes.some(rr => 
+      rr.method === cr.method && rr.path === cr.path
+    )
+  );
+  
+  if (missingRoutes.length > 0) {
+    console.warn('\n⚠️ CRITICAL: Missing required routes:');
+    missingRoutes.forEach(route => {
+      console.warn(`${route.method}: ${route.path}`);
+    });
+  } else {
+    console.log('\n✅ All critical routes are registered');
+  }
 });

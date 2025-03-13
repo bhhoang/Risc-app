@@ -17,17 +17,19 @@
 
   <div class="content-wrapper">
     <!-- Welcome message for unauthenticated users -->
-    <div class="auth-message" *ngIf="!authService.isLoggedIn()">
-      <div class="kid-card welcome-card zoom-in">
-        <div class="welcome-icon">🎮</div>
-        <h2>Bienvenue sur AQuA!</h2>
-        <p>Découvre des quiz amusants pour apprendre tout en t'amusant. Connecte-toi ou crée un compte pour commencer ton aventure d'apprentissage !</p>
-        <div class="action-buttons">
-          <a routerLink="/login" class="kid-button btn-primary">Se connecter</a>
-          <a routerLink="/register" class="btn btn-outline btn-rounded">S'inscrire</a>
+    <ng-container *ngIf="!authService.isLoggedIn()">
+      <div class="auth-message">
+        <div class="kid-card welcome-card zoom-in">
+          <div class="welcome-icon">🎮</div>
+          <h2>Bienvenue sur AQuA!</h2>
+          <p>Découvre des quiz amusants pour apprendre tout en t'amusant. Connecte-toi ou crée un compte pour commencer ton aventure d'apprentissage !</p>
+          <div class="action-buttons">
+            <a routerLink="/login" class="kid-button btn-primary">Se connecter</a>
+            <a routerLink="/register" class="btn btn-outline btn-rounded">S'inscrire</a>
+          </div>
         </div>
       </div>
-    </div>
+    </ng-container>
 
     <!-- Quiz setup for authenticated users -->
     <div class="quiz-setup" *ngIf="authService.isLoggedIn() && !quizStarted">

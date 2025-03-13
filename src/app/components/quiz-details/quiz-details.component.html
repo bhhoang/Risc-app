@@ -1,0 +1,86 @@
+<!-- Create this file as src/app/components/quiz-details/quiz-details.component.html -->
+
+<div class="quiz-details-container">
+    <div class="card details-card">
+      <div class="card-header">
+        <h2>Détails du Quiz</h2>
+        <button class="btn-back" (click)="goBack()">
+          <span>←</span> Retour
+        </button>
+      </div>
+  
+      <!-- Loading state -->
+      <div class="loading-container" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Chargement des détails du quiz...</p>
+      </div>
+  
+      <!-- Error state -->
+      <div class="alert alert-danger" *ngIf="error">
+        <p>{{ error }}</p>
+        <button class="btn btn-outline" (click)="loadQuizDetails()">Réessayer</button>
+      </div>
+  
+      <!-- Quiz details content -->
+      <div class="quiz-content" *ngIf="!loading && !error && quiz">
+        <div class="quiz-header">
+          <div class="quiz-title">
+            <h3>{{ quiz.matiere }} - {{ quiz.sous_sujet }}</h3>
+            <div class="quiz-meta">
+              <span class="badge-level">Niveau {{ quiz.niveau }}</span>
+              <span class="badge-date">{{ quiz.date_creation | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="badge-score" [ngClass]="{
+                'high-score': quiz.score >= 80,
+                'medium-score': quiz.score >= 50 && quiz.score < 80,
+                'low-score': quiz.score < 50
+              }">Score: {{ quiz.score }}%</span>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Quiz feedback section -->
+        <div class="feedback-section" *ngIf="quiz.feedback">
+          <h4>Feedback</h4>
+          <div class="feedback-content" [innerHTML]="formattedFeedback"></div>
+        </div>
+  
+        <!-- Questions and answers section -->
+        <div class="qa-section">
+          <h4>Questions et réponses</h4>
+          <div class="qa-list">
+            <div class="qa-item" *ngFor="let question of quiz.questions; let i = index">
+              <div class="question">
+                <span class="question-number">Q{{ i+1 }}</span>
+                <span class="question-text">{{ question }}</span>
+              </div>
+              <div class="answer" [ngClass]="{'empty-answer': !quiz.reponses[i] || quiz.reponses[i].trim() === ''}">
+                <span class="answer-label">Réponse:</span>
+                <span class="answer-text">{{ quiz.reponses[i] || 'Non répondu' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Lacunes section -->
+        <div class="lacunes-section" *ngIf="quiz.lacunes && quiz.lacunes.length > 0">
+          <h4>Points à améliorer</h4>
+          <ul class="lacunes-list">
+            <li *ngFor="let lacune of quiz.lacunes">
+              <span class="lacune-icon">📝</span>
+              <span>{{ lacune }}</span>
+            </li>
+          </ul>
+        </div>
+  
+        <!-- Action buttons -->
+        <div class="action-buttons">
+          <button class="btn btn-primary" (click)="retakeQuiz()">
+            Refaire un quiz similaire
+          </button>
+          <button class="btn btn-outline" (click)="goBack()">
+            Retour à l'historique
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
