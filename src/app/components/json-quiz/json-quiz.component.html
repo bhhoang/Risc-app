@@ -1,0 +1,132 @@
+<!-- src/app/components/json-quiz/json-quiz.component.html -->
+<div class="quiz-container">
+    <div class="header">
+      <div class="header-left">
+        <h1>Quiz JSON</h1>
+      </div>
+      <div class="user-info" *ngIf="authService.isLoggedIn()">
+        <div class="avatar-container">
+          <div class="avatar">{{ authService.getCurrentUser()?.nom?.substring(0, 2).toUpperCase() || '?' }}</div>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ authService.getCurrentUser()?.nom || 'Utilisateur' }}</span>
+          <span class="user-level">Niveau {{ authService.getCurrentUser()?.niveau_scolaire || 'CP' }}</span>
+        </div>
+      </div>
+    </div>
+  
+    <div class="content-wrapper">
+      <!-- Loading state -->
+      <div class="loading-container" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Chargement des quiz...</p>
+      </div>
+      
+      <!-- Error state -->
+      <div class="alert alert-danger" *ngIf="error">
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" (click)="loadQuizzes()">Réessayer</button>
+      </div>
+      
+      <!-- Quiz selection -->
+      <div class="quiz-selection" *ngIf="!loading && !error && !quizStarted">
+        <div class="kid-card setup-card slide-up">
+          <div class="card-header">
+            <div class="setup-icon">📚</div>
+            <h2>Choisissez un quiz</h2>
+            <p>Sélectionnez un quiz dans la liste ci-dessous pour commencer</p>
+          </div>
+          
+          <div class="quiz-list">
+            <div 
+              *ngFor="let quiz of allQuizzes" 
+              class="quiz-option" 
+              [class.selected]="selectedQuiz?.quizID === quiz.quizID"
+              (click)="selectQuiz(quiz)">
+              <h3>{{ quiz.subject }} - {{ quiz.topic }}</h3>
+              <div class="quiz-meta">
+                <span class="badge" [ngClass]="'difficulty-' + quiz.difficulty.toLowerCase()">
+                  {{ quiz.difficulty }}
+                </span>
+                <span class="questions-count">{{ quiz.questions.length }} questions</span>
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            class="kid-button btn-block" 
+            [disabled]="!selectedQuiz" 
+            (click)="startQuiz()">
+            Commencer le quiz
+          </button>
+        </div>
+      </div>
+      
+      <!-- Quiz questions -->
+      <div class="quiz-questions" *ngIf="quizStarted && !quizCompleted && selectedQuiz">
+        <div class="kid-card question-card slide-up">
+          <div class="quiz-header">
+            <div class="badge badge-primary subject-badge">{{ selectedQuiz.subject }} - {{ selectedQuiz.topic }}</div>
+            <div class="quiz-progress">
+              <span class="progress-text">Question {{ currentQuestionIndex + 1 }}/{{ selectedQuiz.questions.length }}</span>
+            </div>
+          </div>
+          
+          <div class="progress">
+            <div class="progress-bar" [style.width.%]="getProgressPercentage()"></div>
+          </div>
+          
+          <div class="question-container" *ngIf="getCurrentQuestion()">
+            <div class="question-bubble">
+              <h3 class="question-text">{{ getCurrentQuestion()?.question }}</h3>
+            </div>
+            
+            <div class="options-container">
+              <div 
+                *ngFor="let option of getCurrentQuestion()?.options" 
+                class="option-item" 
+                [class.selected]="selectedOption === option"
+                (click)="selectAnswer(option)">
+                <span class="option-text">{{ option }}</span>
+              </div>
+            </div>
+            
+            <div class="navigation-buttons">
+              <button 
+                class="btn btn-outline btn-rounded" 
+                *ngIf="currentQuestionIndex > 0" 
+                (click)="previousQuestion()">
+                <span class="btn-icon">⬅️</span> Question précédente
+              </button>
+              <button 
+                class="kid-button" 
+                [disabled]="!selectedOption"
+                (click)="nextQuestion()">
+                {{ currentQuestionIndex < selectedQuiz.questions.length - 1 ? 'Question suivante' : 'Terminer le quiz' }}
+                <span class="btn-icon">{{ currentQuestionIndex < selectedQuiz.questions.length - 1 ? '➡️' : '✅' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Quiz results -->
+      <div class="quiz-results" *ngIf="quizCompleted && selectedQuiz">
+        <div class="kid-card result-card zoom-in">
+          <div class="result-header">
+            <div class="result-icon">{{ score >= 80 ? '🏆' : (score >= 50 ? '🎯' : '📚') }}</div>
+            <h2>{{ score >= 80 ? 'Bravo !' : (score >= 50 ? 'Bien joué !' : 'Continuez à apprendre !') }}</h2>
+            <p>Vous avez obtenu un score de {{ score }}% au quiz {{ selectedQuiz.subject }} - {{ selectedQuiz.topic }}</p>
+          </div>
+          
+          <div class="feedback-container" [innerHTML]="formattedFeedback"></div>
+          
+          <div class="result-actions">
+            <button class="kid-button" (click)="resetQuiz()">
+              <span class="btn-icon">🔄</span> Nouveau quiz
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

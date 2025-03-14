@@ -1,0 +1,110 @@
+[
+    {
+      "quizID": "quiz-1",
+      "subject": "Maths",
+      "topic": "Addition",
+      "difficulty": "easy",
+      "questions": [
+        {
+          "type": "QCM",
+          "question": "Combien font 2 + 2 ?",
+          "options": ["3", "4", "5"],
+          "correctAnswer": "4",
+          "explanation": "2 + 2 = 4",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 5 + 3 ?",
+          "options": ["7", "8", "9"],
+          "correctAnswer": "8",
+          "explanation": "5 + 3 = 8",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 10 + 7 ?",
+          "options": ["16", "17", "18"],
+          "correctAnswer": "17",
+          "explanation": "10 + 7 = 17",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 12 + 5 ?",
+          "options": ["16", "17", "18"],
+          "correctAnswer": "17",
+          "explanation": "12 + 5 = 17",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 8 + 6 ?",
+          "options": ["13", "14", "15"],
+          "correctAnswer": "14",
+          "explanation": "8 + 6 = 14",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 9 + 4 ?",
+          "options": ["12", "13", "14"],
+          "correctAnswer": "13",
+          "explanation": "9 + 4 = 13",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 7 + 7 ?",
+          "options": ["13", "14", "15"],
+          "correctAnswer": "14",
+          "explanation": "7 + 7 = 14",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 6 + 9 ?",
+          "options": ["14", "15", "16"],
+          "correctAnswer": "15",
+          "explanation": "6 + 9 = 15",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 11 + 8 ?",
+          "options": ["18", "19", "20"],
+          "correctAnswer": "19",
+          "explanation": "11 + 8 = 19",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        },
+        {
+          "type": "QCM",
+          "question": "Combien font 15 + 5 ?",
+          "options": ["19", "20", "21"],
+          "correctAnswer": "20",
+          "explanation": "15 + 5 = 20",
+          "points": 10,
+          "category": ["Maths", "Addition"],
+          "difficulty": "easy"
+        }
+      ]
+    }
+  ]
